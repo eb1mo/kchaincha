@@ -15,9 +15,9 @@ const Admin = () => {
     procedure: [''],
     estimatedTime: '',
     charge: '',
-    sampleFormUrl: '',
     tokensEnabled: false,
-    dailyTokenLimit: 0
+    dailyTokenLimit: 50,
+    sampleFormUrl: ''
   });
   const [selectedFile, setSelectedFile] = useState(null);
   const [uploading, setUploading] = useState(false);
@@ -267,9 +267,9 @@ const Admin = () => {
       procedure: [''],
       estimatedTime: '',
       charge: '',
-      sampleFormUrl: '',
       tokensEnabled: false,
-      dailyTokenLimit: 0
+      dailyTokenLimit: 50,
+      sampleFormUrl: ''
     });
     setEditingService(null);
     setSelectedFile(null);
@@ -278,57 +278,60 @@ const Admin = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-100 flex items-center justify-center">
         <div className="text-center">
-          <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-red-500"></div>
-          <p className="mt-4 text-gray-600">Loading admin panel...</p>
+          <div className="inline-block animate-spin rounded-full h-12 w-12 border-4 border-red-200 border-t-red-500"></div>
+          <p className="mt-4 text-gray-600 font-medium">Loading admin panel...</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-100">
       {/* Header */}
-      <header className="bg-white shadow-sm border-b">
+      <header className="bg-white/80 backdrop-blur-md shadow-sm border-b border-gray-200/50 sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between space-y-4 sm:space-y-0">
             <Link to="/" className="flex items-center space-x-3">
               <img 
                 src="/kchaincha-nav.png" 
                 alt="Kchaincha Logo" 
-                className="w-40"
+                className="w-32 sm:w-40 hover:scale-105 transition-transform duration-300"
               />
-              <div>
-                <h1 className="text-2xl font-bold text-gray-900">Admin Panel</h1>
+              <div className="hidden sm:block">
+                <h1 className="text-xl lg:text-2xl font-bold text-gray-900">Admin Panel</h1>
                 <p className="text-sm text-gray-600">Manage Government Services</p>
               </div>
             </Link>
-            <div className="flex items-center space-x-4">
-              <div className="text-right">
-                <p className="text-sm font-medium text-gray-900">Welcome, {user?.username}</p>
+            <div className="flex flex-col sm:flex-row items-start sm:items-center space-y-2 sm:space-y-0 sm:space-x-4 w-full sm:w-auto">
+              <div className="text-left sm:text-right bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl px-4 py-2 w-full sm:w-auto">
+                <p className="text-sm font-semibold text-gray-900">Welcome, {user?.username}</p>
                 <p className="text-xs text-gray-600">{user?.organizationName}</p>
               </div>
-              {user?.role === 'superadmin' && (
-                <Link
-                  to="/superadmin"
-                  className="bg-purple-500 text-white px-4 py-2 rounded-lg hover:bg-purple-600 transition-colors flex items-center space-x-2"
+              <div className="flex space-x-2 w-full sm:w-auto">
+                {user?.role === 'superadmin' && (
+                  <Link
+                    to="/superadmin"
+                    className="bg-gradient-to-r from-purple-500 to-purple-600 text-white px-4 py-2 rounded-xl hover:from-purple-600 hover:to-purple-700 transition-all duration-300 flex items-center space-x-2 shadow-lg hover:shadow-xl hover:-translate-y-0.5 text-sm flex-1 sm:flex-none justify-center"
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                    </svg>
+                    <span className="hidden sm:inline">SuperAdmin</span>
+                    <span className="sm:hidden">Super</span>
+                  </Link>
+                )}
+                <button
+                  onClick={handleLogout}
+                  className="bg-gradient-to-r from-gray-500 to-gray-600 text-white px-4 py-2 rounded-xl hover:from-gray-600 hover:to-gray-700 transition-all duration-300 flex items-center space-x-2 shadow-lg hover:shadow-xl hover:-translate-y-0.5 text-sm flex-1 sm:flex-none justify-center"
                 >
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
                   </svg>
-                  <span>SuperAdmin</span>
-                </Link>
-              )}
-              <button
-                onClick={handleLogout}
-                className="bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition-colors flex items-center space-x-2"
-              >
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-                </svg>
-                <span>Logout</span>
-              </button>
+                  <span>Logout</span>
+                </button>
+              </div>
             </div>
           </div>
         </div>
@@ -337,14 +340,14 @@ const Admin = () => {
       {/* Main Content */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Action Buttons */}
-        <div className="flex justify-between items-center mb-8">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 space-y-4 sm:space-y-0">
           <div>
-            <h2 className="text-3xl font-bold text-gray-900">Your Services</h2>
+            <h2 className="text-2xl sm:text-3xl font-bold text-gray-900">Your Services</h2>
             <p className="text-gray-600 mt-1">Manage services for {user?.organizationName}</p>
           </div>
           <button
             onClick={() => setShowForm(!showForm)}
-            className="bg-red-500 text-white px-6 py-3 rounded-lg hover:bg-red-600 transition-colors flex items-center space-x-2"
+            className="bg-gradient-to-r from-red-500 to-red-600 text-white px-6 py-3 rounded-xl hover:from-red-600 hover:to-red-700 transition-all duration-300 flex items-center space-x-2 shadow-lg hover:shadow-xl hover:-translate-y-0.5 w-full sm:w-auto justify-center"
           >
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
@@ -355,14 +358,14 @@ const Admin = () => {
 
         {/* Add/Edit Form */}
         {showForm && (
-          <div className="bg-white rounded-xl shadow-lg p-8 mb-8">
-            <h3 className="text-2xl font-bold text-gray-900 mb-6">
+          <div className="bg-white/70 backdrop-blur-sm rounded-2xl shadow-xl border border-gray-200/50 p-6 sm:p-8 mb-8">
+            <h3 className="text-xl sm:text-2xl font-bold text-gray-900 mb-6">
               {editingService ? 'Edit Service' : 'Add New Service'}
             </h3>
             <form onSubmit={handleSubmit} className="space-y-6">
               {/* Service Name */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-semibold text-gray-700 mb-3">
                   Service Name *
                 </label>
                 <input
@@ -371,34 +374,35 @@ const Admin = () => {
                   value={formData.serviceName}
                   onChange={handleInputChange}
                   required
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500"
+                  className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:ring-4 focus:ring-red-100 focus:border-red-500 transition-all duration-300 bg-white/80 backdrop-blur-sm"
                   placeholder="e.g., Driving License Application"
                 />
               </div>
 
               {/* Required Documents */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-semibold text-gray-700 mb-3">
                   Required Documents *
                 </label>
                 {formData.documents.map((document, index) => (
-                  <div key={index} className="flex items-center space-x-2 mb-2">
+                  <div key={index} className="flex flex-col sm:flex-row items-start sm:items-center space-y-2 sm:space-y-0 sm:space-x-2 mb-3">
                     <input
                       type="text"
                       value={document}
                       onChange={(e) => handleDocumentChange(index, e.target.value)}
-                      className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500"
+                      className="flex-1 w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:ring-4 focus:ring-red-100 focus:border-red-500 transition-all duration-300 bg-white/80 backdrop-blur-sm"
                       placeholder="e.g., Original Citizenship Certificate"
                     />
                     {formData.documents.length > 1 && (
                       <button
                         type="button"
                         onClick={() => removeDocumentField(index)}
-                        className="text-red-600 hover:text-red-700 p-2"
+                        className="text-red-600 hover:text-red-700 p-2 bg-red-50 hover:bg-red-100 rounded-xl transition-colors w-full sm:w-auto justify-center flex items-center"
                       >
                         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                         </svg>
+                        <span className="ml-2 sm:hidden">Remove</span>
                       </button>
                     )}
                   </div>
@@ -406,7 +410,7 @@ const Admin = () => {
                 <button
                   type="button"
                   onClick={addDocumentField}
-                  className="text-red-600 hover:text-red-700 text-sm font-medium flex items-center space-x-1"
+                  className="text-red-600 hover:text-red-700 text-sm font-semibold flex items-center space-x-2 bg-red-50 hover:bg-red-100 px-4 py-2 rounded-xl transition-all duration-300"
                 >
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
@@ -417,11 +421,11 @@ const Admin = () => {
 
               {/* Procedure */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-semibold text-gray-700 mb-3">
                   Step-by-Step Procedure *
                 </label>
                 {formData.procedure.map((step, index) => (
-                  <div key={index} className="flex items-center space-x-2 mb-2">
+                  <div key={index} className="flex flex-col sm:flex-row items-start sm:items-center space-y-2 sm:space-y-0 sm:space-x-2 mb-3">
                     <input
                       type="text"
                       value={step}
@@ -433,7 +437,7 @@ const Admin = () => {
                           procedure: newProcedure
                         }));
                       }}
-                      className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500"
+                      className="flex-1 w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:ring-4 focus:ring-red-100 focus:border-red-500 transition-all duration-300 bg-white/80 backdrop-blur-sm"
                       placeholder="e.g., Step 1: Collect documents"
                     />
                     {formData.procedure.length > 1 && (
@@ -446,11 +450,12 @@ const Admin = () => {
                             procedure: newProcedure
                           }));
                         }}
-                        className="text-red-600 hover:text-red-700 p-2"
+                        className="text-red-600 hover:text-red-700 p-2 bg-red-50 hover:bg-red-100 rounded-xl transition-colors w-full sm:w-auto justify-center flex items-center"
                       >
                         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                         </svg>
+                        <span className="ml-2 sm:hidden">Remove</span>
                       </button>
                     )}
                   </div>
@@ -461,7 +466,7 @@ const Admin = () => {
                     ...prev,
                     procedure: [...prev.procedure, '']
                   }))}
-                  className="text-red-600 hover:text-red-700 text-sm font-medium flex items-center space-x-1"
+                  className="text-red-600 hover:text-red-700 text-sm font-semibold flex items-center space-x-2 bg-red-50 hover:bg-red-100 px-4 py-2 rounded-xl transition-all duration-300"
                 >
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
@@ -470,10 +475,10 @@ const Admin = () => {
                 </button>
               </div>
 
-              {/* Estimated Time and Charge */}
+              {/* Time and Charge */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-sm font-semibold text-gray-700 mb-3">
                     Estimated Time *
                   </label>
                   <input
@@ -482,12 +487,12 @@ const Admin = () => {
                     value={formData.estimatedTime}
                     onChange={handleInputChange}
                     required
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500"
+                    className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:ring-4 focus:ring-red-100 focus:border-red-500 transition-all duration-300 bg-white/80 backdrop-blur-sm"
                     placeholder="e.g., 7-15 working days"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-sm font-semibold text-gray-700 mb-3">
                     Service Charge *
                   </label>
                   <input
@@ -496,7 +501,7 @@ const Admin = () => {
                     value={formData.charge}
                     onChange={handleInputChange}
                     required
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500"
+                    className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:ring-4 focus:ring-red-100 focus:border-red-500 transition-all duration-300 bg-white/80 backdrop-blur-sm"
                     placeholder="e.g., Rs. 500"
                   />
                 </div>
@@ -504,62 +509,47 @@ const Admin = () => {
 
               {/* Sample Form Upload */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-semibold text-gray-700 mb-3">
                   Sample Form (PDF)
                 </label>
                 <input
                   type="file"
+                  name="sampleForm"
                   accept=".pdf"
                   onChange={handleFileChange}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500"
+                  className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:ring-4 focus:ring-red-100 focus:border-red-500 transition-all duration-300 bg-white/80 backdrop-blur-sm file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-red-50 file:text-red-700 hover:file:bg-red-100"
                 />
                 {formData.sampleFormUrl && (
-                  <p className="mt-2 text-sm text-gray-600">
-                    Current file: 
-                    <a 
-                      href={getFileUrl(formData.sampleFormUrl)} 
-                      target="_blank" 
-                      rel="noopener noreferrer"
-                      className="text-red-600 hover:text-red-700 ml-1"
-                    >
-                      View PDF
-                    </a>
+                  <p className="mt-2 text-sm text-green-600 bg-green-50 px-3 py-2 rounded-lg">
+                    Current file: {formData.sampleFormUrl.split('/').pop()}
                   </p>
                 )}
               </div>
 
-              {/* Token System Settings */}
-              <div className="border-t pt-6">
-                <div className="flex items-center space-x-3 mb-4">
-                  <div className="w-8 h-8 bg-purple-100 rounded-lg flex items-center justify-center">
-                    <svg className="w-5 h-5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a1 1 0 001 1h1a1 1 0 001-1V7a2 2 0 00-2-2H5zM5 14a2 2 0 00-2 2v3a1 1 0 001 1h1a1 1 0 001-1v-3a2 2 0 00-2-2H5z" />
-                    </svg>
-                  </div>
-                  <h4 className="text-lg font-semibold text-gray-900">Token System (Optional)</h4>
-                </div>
-                
+              {/* Token System */}
+              <div className="bg-gradient-to-r from-purple-50 to-indigo-50 rounded-xl p-6 border border-purple-200">
+                <h4 className="text-lg font-semibold text-gray-900 mb-4 flex items-center space-x-2">
+                  <svg className="w-5 h-5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 110 4v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 110-4V7a2 2 0 00-2-2H5z" />
+                  </svg>
+                  <span>Token System Settings</span>
+                </h4>
                 <div className="space-y-4">
-                  <div className="flex items-center">
+                  <label className="flex items-center space-x-3 cursor-pointer">
                     <input
                       type="checkbox"
                       name="tokensEnabled"
                       checked={formData.tokensEnabled}
-                      onChange={(e) => setFormData(prev => ({ 
-                        ...prev, 
-                        tokensEnabled: e.target.checked,
-                        dailyTokenLimit: e.target.checked ? prev.dailyTokenLimit || 10 : 0
-                      }))}
-                      className="h-4 w-4 text-purple-600 focus:ring-purple-500 border-gray-300 rounded"
+                      onChange={handleInputChange}
+                      className="w-5 h-5 text-purple-600 bg-white border-2 border-gray-300 rounded focus:ring-purple-500 focus:ring-2"
                     />
-                    <label className="ml-2 block text-sm text-gray-900">
-                      Enable daily token system for this service
-                    </label>
-                  </div>
-                  
+                    <span className="text-sm font-medium text-gray-700">
+                      Enable Daily Token System
+                    </span>
+                  </label>
                   {formData.tokensEnabled && (
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                      <label className="block text-sm font-semibold text-gray-700 mb-3">
                         Daily Token Limit *
                       </label>
                       <input
@@ -570,35 +560,49 @@ const Admin = () => {
                         min="1"
                         max="1000"
                         required={formData.tokensEnabled}
-                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+                        className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:ring-4 focus:ring-purple-100 focus:border-purple-500 transition-all duration-300 bg-white/80 backdrop-blur-sm"
                         placeholder="e.g., 50"
                       />
-                      <p className="mt-1 text-sm text-gray-500">
-                        Maximum number of tokens that can be issued per day. Tokens reset daily at midnight.
-                      </p>
                     </div>
                   )}
                 </div>
               </div>
 
-              {/* Submit Buttons */}
-              <div className="flex space-x-4">
-                <button
-                  type="submit"
-                  disabled={uploading}
-                  className="bg-red-500 text-white px-8 py-3 rounded-lg hover:bg-red-600 transition-colors disabled:opacity-50 flex items-center space-x-2"
-                >
-                  {uploading && (
-                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                  )}
-                  <span>{editingService ? 'Update Service' : 'Add Service'}</span>
-                </button>
+              {/* Submit Button */}
+              <div className="flex flex-col sm:flex-row justify-end space-y-3 sm:space-y-0 sm:space-x-4 pt-6 border-t border-gray-200">
                 <button
                   type="button"
-                  onClick={resetForm}
-                  className="bg-gray-500 text-white px-8 py-3 rounded-lg hover:bg-gray-600 transition-colors"
+                  onClick={() => {
+                    setShowForm(false);
+                    setEditingService(null);
+                    setFormData({
+                      serviceName: '',
+                      documents: [''],
+                      procedure: [''],
+                      estimatedTime: '',
+                      charge: '',
+                      tokensEnabled: false,
+                      dailyTokenLimit: 50,
+                      sampleFormUrl: ''
+                    });
+                  }}
+                  className="w-full sm:w-auto px-6 py-3 border-2 border-gray-300 text-gray-700 rounded-xl hover:bg-gray-50 hover:border-gray-400 transition-all duration-300 font-semibold"
                 >
                   Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className="w-full sm:w-auto bg-gradient-to-r from-red-500 to-red-600 text-white px-8 py-3 rounded-xl hover:from-red-600 hover:to-red-700 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-xl hover:-translate-y-0.5 font-semibold"
+                >
+                  {loading ? (
+                    <div className="flex items-center justify-center space-x-2">
+                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                      <span>Saving...</span>
+                    </div>
+                  ) : (
+                    editingService ? 'Update Service' : 'Add Service'
+                  )}
                 </button>
               </div>
             </form>
@@ -606,77 +610,82 @@ const Admin = () => {
         )}
 
         {/* Services List */}
-        <div className="bg-white rounded-xl shadow-lg overflow-hidden">
-          <div className="px-6 py-4 border-b border-gray-200">
-            <h3 className="text-lg font-semibold text-gray-900">
-              Your Services ({services.length})
-            </h3>
+        <div className="bg-white/70 backdrop-blur-sm rounded-2xl shadow-xl border border-gray-200/50 overflow-hidden">
+          <div className="px-6 py-4 bg-gradient-to-r from-gray-50 to-gray-100 border-b border-gray-200">
+            <h3 className="text-lg font-semibold text-gray-900">Your Services ({services.length})</h3>
           </div>
           
           {services.length === 0 ? (
             <div className="text-center py-12">
-              <div className="text-6xl mb-4">📋</div>
-              <h3 className="text-xl font-semibold text-gray-900 mb-2">No Services Yet</h3>
-              <p className="text-gray-600">Add your first government service to get started.</p>
+              <svg className="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+              </svg>
+              <h3 className="mt-4 text-lg font-medium text-gray-900">No services yet</h3>
+              <p className="mt-2 text-gray-500">Get started by adding your first service.</p>
             </div>
           ) : (
             <div className="overflow-x-auto">
               <table className="min-w-full divide-y divide-gray-200">
-                <thead className="bg-gray-50">
+                <thead className="bg-gray-50/50">
                   <tr>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
                       Service Name
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Time
+                    <th className="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                      Time & Charge
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Charge
+                    <th className="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                      Tokens
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Documents
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
                       Actions
                     </th>
                   </tr>
                 </thead>
-                <tbody className="bg-white divide-y divide-gray-200">
+                <tbody className="bg-white/50 divide-y divide-gray-200">
                   {services.map((service) => (
-                    <tr key={service._id} className="hover:bg-gray-50">
+                    <tr key={service._id} className="hover:bg-gray-50/50 transition-colors">
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="text-sm font-medium text-gray-900">
-                          {service.serviceName}
-                        </div>
+                        <div className="text-sm font-semibold text-gray-900">{service.serviceName}</div>
+                        <div className="text-sm text-gray-500">{service.organizationName}</div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="text-sm text-gray-900">{service.estimatedTime}</div>
+                        <div className="text-sm text-gray-500">{service.charge}</div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="text-sm text-gray-900">{service.charge}</div>
-                      </td>
-                      <td className="px-6 py-4">
-                        <div className="text-sm text-gray-900">
-                          {service.documents.length} document(s)
-                        </div>
+                        {service.tokensEnabled ? (
+                          <div className="flex items-center space-x-2">
+                            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                              Enabled
+                            </span>
+                            <span className="text-sm text-gray-500">
+                              Limit: {service.dailyTokenLimit}
+                            </span>
+                          </div>
+                        ) : (
+                          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+                            Disabled
+                          </span>
+                        )}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                        <div className="flex space-x-2">
+                        <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2">
                           <button
                             onClick={() => handleEdit(service)}
-                            className="text-indigo-600 hover:text-indigo-900"
+                            className="text-indigo-600 hover:text-indigo-900 bg-indigo-50 hover:bg-indigo-100 px-3 py-1 rounded-lg transition-colors text-xs font-semibold"
                           >
                             Edit
                           </button>
                           <button
                             onClick={() => handleDelete(service._id)}
-                            className="text-red-600 hover:text-red-900"
+                            className="text-red-600 hover:text-red-900 bg-red-50 hover:bg-red-100 px-3 py-1 rounded-lg transition-colors text-xs font-semibold"
                           >
                             Delete
                           </button>
                           <Link
                             to={`/service/${service._id}`}
-                            className="text-green-600 hover:text-green-900"
+                            className="text-green-600 hover:text-green-900 bg-green-50 hover:bg-green-100 px-3 py-1 rounded-lg transition-colors text-xs font-semibold text-center"
                           >
                             View
                           </Link>

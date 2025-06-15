@@ -1,6 +1,8 @@
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import Home from './components/Home';
 import ServiceDetail from './components/ServiceDetail';
+import OrganizationServices from './components/OrganizationServices';
+import BundleDetail from './components/BundleDetail';
 import Admin from './components/Admin';
 import SuperAdmin from './components/SuperAdmin';
 import Login from './components/Login';
@@ -16,6 +18,8 @@ function App() {
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/service/:id" element={<ServiceDetail />} />
+          <Route path="/organization/:organizationName" element={<OrganizationServices />} />
+          <Route path="/bundle/:bundleId" element={<BundleDetail />} />
           <Route 
             path="/admin" 
             element={

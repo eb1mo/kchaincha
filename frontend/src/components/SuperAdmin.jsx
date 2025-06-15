@@ -32,6 +32,23 @@ const SuperAdmin = () => {
       municipality: ''
     }
   });
+
+  // Service management form
+  const [showServiceForm, setShowServiceForm] = useState(false);
+  const [editingService, setEditingService] = useState(null);
+  const [serviceForm, setServiceForm] = useState({
+    serviceName: '',
+    requiredDocuments: [''],
+    procedure: [''],
+    estimatedTime: '',
+    charge: '',
+    sampleForm: null,
+    tokenSystemEnabled: false,
+    dailyTokenLimit: 50
+  });
+
+  // Service search term
+  const [serviceSearchTerm, setServiceSearchTerm] = useState('');
   
   const navigate = useNavigate();
 
@@ -260,6 +277,89 @@ const SuperAdmin = () => {
     }));
   };
 
+  // Service Management Functions
+  const handleServiceSubmit = async (e) => {
+    e.preventDefault();
+    
+    try {
+      const formData = new FormData();
+      formData.append('serviceName', serviceForm.serviceName);
+      formData.append('requiredDocuments', JSON.stringify(serviceForm.requiredDocuments.filter(doc => doc.trim())));
+      formData.append('procedure', JSON.stringify(serviceForm.procedure.filter(step => step.trim())));
+      formData.append('estimatedTime', serviceForm.estimatedTime);
+      formData.append('charge', serviceForm.charge);
+      formData.append('tokenSystemEnabled', serviceForm.tokenSystemEnabled);
+      formData.append('dailyTokenLimit', serviceForm.dailyTokenLimit);
+      
+      if (serviceForm.sampleForm) {
+        formData.append('sampleForm', serviceForm.sampleForm);
+      }
+
+      if (editingService) {
+        const response = await axios.put(`${API_ENDPOINTS.SUPERADMIN.SERVICES}/${editingService._id}`, 
+          formData, 
+          { 
+            headers: {
+              'Authorization': `Bearer ${localStorage.getItem('token')}`,
+              'Content-Type': 'multipart/form-data'
+            }
+          }
+        );
+        setServices(services.map(service => 
+          service._id === editingService._id ? response.data : service
+        ));
+        alert('Service updated successfully!');
+      } else {
+        const response = await axios.post(API_ENDPOINTS.SUPERADMIN.SERVICES, 
+          formData, 
+          { 
+            headers: {
+              'Authorization': `Bearer ${localStorage.getItem('token')}`,
+              'Content-Type': 'multipart/form-data'
+            }
+          }
+        );
+        setServices([response.data, ...services]);
+        alert('Service created successfully!');
+      }
+      
+      resetServiceForm();
+    } catch (error) {
+      console.error('Error saving service:', error);
+      alert(error.response?.data?.error || 'Error saving service');
+    }
+  };
+
+  const handleDeleteService = async (serviceId) => {
+    if (window.confirm('Are you sure you want to delete this service?')) {
+      try {
+        await axios.delete(`${API_ENDPOINTS.SUPERADMIN.SERVICES}/${serviceId}`, 
+          { headers: getAuthHeaders() }
+        );
+        setServices(services.filter(service => service._id !== serviceId));
+        alert('Service deleted successfully!');
+      } catch (error) {
+        console.error('Error deleting service:', error);
+        alert('Error deleting service');
+      }
+    }
+  };
+
+  const resetServiceForm = () => {
+    setServiceForm({
+      serviceName: '',
+      requiredDocuments: [''],
+      procedure: [''],
+      estimatedTime: '',
+      charge: '',
+      sampleForm: null,
+      tokenSystemEnabled: false,
+      dailyTokenLimit: 50
+    });
+    setEditingService(null);
+    setShowServiceForm(false);
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
@@ -314,7 +414,8 @@ const SuperAdmin = () => {
             {[
               { id: 'users', name: 'User Management', icon: '👥' },
               { id: 'licenses', name: 'License Keys', icon: '🔑' },
-              { id: 'bundles', name: 'Service Bundles', icon: '📦' }
+              { id: 'bundles', name: 'Service Bundles', icon: '📦' },
+              { id: 'services', name: 'Services', icon: '🔧' }
             ].map((tab) => (
               <button
                 key={tab.id}
@@ -769,6 +870,343 @@ const SuperAdmin = () => {
                         <button className="bg-purple-500 text-white px-6 py-2 rounded-lg hover:bg-purple-600 transition-colors text-sm font-medium">
                           View Bundle
                         </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Services Tab */}
+          {activeTab === 'services' && (
+            <div className="space-y-6">
+              {/* Service Creation Button */}
+              <div className="flex justify-between items-center">
+                <h2 className="text-2xl font-bold text-gray-900">Services</h2>
+                <button
+                  onClick={() => setShowServiceForm(!showServiceForm)}
+                  className="bg-purple-500 text-white px-6 py-3 rounded-lg hover:bg-purple-600 transition-colors flex items-center space-x-2"
+                >
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                  </svg>
+                  <span>{showServiceForm ? 'Cancel' : 'Create Service'}</span>
+                </button>
+              </div>
+
+              {/* Service Creation Form */}
+              {showServiceForm && (
+                <div className="bg-white rounded-xl shadow-lg p-8">
+                  <h3 className="text-xl font-bold text-gray-900 mb-6">
+                    {editingService ? 'Edit Service' : 'Create New Service'}
+                  </h3>
+                  
+                  <form onSubmit={handleServiceSubmit} className="space-y-6">
+                    {/* Service Basic Info */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          Service Name *
+                        </label>
+                        <input
+                          type="text"
+                          value={serviceForm.serviceName}
+                          onChange={(e) => setServiceForm(prev => ({ ...prev, serviceName: e.target.value }))}
+                          required
+                          className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+                          placeholder="e.g., Vehicle Registration"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          Estimated Time *
+                        </label>
+                        <input
+                          type="text"
+                          value={serviceForm.estimatedTime}
+                          onChange={(e) => setServiceForm(prev => ({ ...prev, estimatedTime: e.target.value }))}
+                          required
+                          className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+                          placeholder="e.g., 30 minutes"
+                        />
+                      </div>
+                    </div>
+
+                    {/* Required Documents */}
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Required Documents *
+                      </label>
+                      {serviceForm.requiredDocuments.map((doc, index) => (
+                        <div key={index} className="flex items-center space-x-2 mb-2">
+                          <input
+                            type="text"
+                            value={doc}
+                            onChange={(e) => {
+                              const newDocs = [...serviceForm.requiredDocuments];
+                              newDocs[index] = e.target.value;
+                              setServiceForm(prev => ({ ...prev, requiredDocuments: newDocs }));
+                            }}
+                            className="flex-1 px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+                            placeholder="e.g., Citizenship Certificate"
+                          />
+                          {serviceForm.requiredDocuments.length > 1 && (
+                            <button
+                              type="button"
+                              onClick={() => {
+                                const newDocs = serviceForm.requiredDocuments.filter((_, i) => i !== index);
+                                setServiceForm(prev => ({ ...prev, requiredDocuments: newDocs }));
+                              }}
+                              className="px-3 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600"
+                            >
+                              Remove
+                            </button>
+                          )}
+                        </div>
+                      ))}
+                      <button
+                        type="button"
+                        onClick={() => setServiceForm(prev => ({ 
+                          ...prev, 
+                          requiredDocuments: [...prev.requiredDocuments, ''] 
+                        }))}
+                        className="mt-2 px-4 py-2 bg-purple-500 text-white rounded-lg hover:bg-purple-600"
+                      >
+                        Add Document
+                      </button>
+                    </div>
+
+                    {/* Procedure Steps */}
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Procedure Steps *
+                      </label>
+                      {serviceForm.procedure.map((step, index) => (
+                        <div key={index} className="flex items-center space-x-2 mb-2">
+                          <span className="text-sm font-medium text-gray-500 w-8">{index + 1}.</span>
+                          <input
+                            type="text"
+                            value={step}
+                            onChange={(e) => {
+                              const newSteps = [...serviceForm.procedure];
+                              newSteps[index] = e.target.value;
+                              setServiceForm(prev => ({ ...prev, procedure: newSteps }));
+                            }}
+                            className="flex-1 px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+                            placeholder="e.g., Fill out the application form"
+                          />
+                          {serviceForm.procedure.length > 1 && (
+                            <button
+                              type="button"
+                              onClick={() => {
+                                const newSteps = serviceForm.procedure.filter((_, i) => i !== index);
+                                setServiceForm(prev => ({ ...prev, procedure: newSteps }));
+                              }}
+                              className="px-3 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600"
+                            >
+                              Remove
+                            </button>
+                          )}
+                        </div>
+                      ))}
+                      <button
+                        type="button"
+                        onClick={() => setServiceForm(prev => ({ 
+                          ...prev, 
+                          procedure: [...prev.procedure, ''] 
+                        }))}
+                        className="mt-2 px-4 py-2 bg-purple-500 text-white rounded-lg hover:bg-purple-600"
+                      >
+                        Add Step
+                      </button>
+                    </div>
+
+                    {/* Service Charge */}
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Service Charge *
+                      </label>
+                      <input
+                        type="text"
+                        value={serviceForm.charge}
+                        onChange={(e) => setServiceForm(prev => ({ ...prev, charge: e.target.value }))}
+                        required
+                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+                        placeholder="e.g., Rs. 500"
+                      />
+                    </div>
+
+                    {/* Sample Form Upload */}
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Sample Form (PDF)
+                      </label>
+                      <input
+                        type="file"
+                        accept=".pdf"
+                        onChange={(e) => {
+                          const file = e.target.files[0];
+                          setServiceForm(prev => ({ ...prev, sampleForm: file }));
+                        }}
+                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+                      />
+                      {editingService && editingService.sampleForm && (
+                        <p className="mt-2 text-sm text-gray-600">
+                          Current file: {editingService.sampleForm.split('/').pop()}
+                        </p>
+                      )}
+                    </div>
+
+                    {/* Token System Settings */}
+                    <div className="bg-gray-50 p-6 rounded-lg">
+                      <h4 className="text-lg font-medium text-gray-900 mb-4">Token System Settings</h4>
+                      
+                      <div className="flex items-center space-x-3 mb-4">
+                        <input
+                          type="checkbox"
+                          id="tokenSystemEnabled"
+                          checked={serviceForm.tokenSystemEnabled}
+                          onChange={(e) => setServiceForm(prev => ({ ...prev, tokenSystemEnabled: e.target.checked }))}
+                          className="h-4 w-4 text-purple-600 focus:ring-purple-500 border-gray-300 rounded"
+                        />
+                        <label htmlFor="tokenSystemEnabled" className="text-sm font-medium text-gray-700">
+                          Enable Daily Token System
+                        </label>
+                      </div>
+
+                      {serviceForm.tokenSystemEnabled && (
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-2">
+                            Daily Token Limit *
+                          </label>
+                          <input
+                            type="number"
+                            min="1"
+                            value={serviceForm.dailyTokenLimit}
+                            onChange={(e) => setServiceForm(prev => ({ ...prev, dailyTokenLimit: parseInt(e.target.value) }))}
+                            required={serviceForm.tokenSystemEnabled}
+                            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+                            placeholder="e.g., 50"
+                          />
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Submit Buttons */}
+                    <div className="flex space-x-4">
+                      <button
+                        type="submit"
+                        className="bg-purple-500 text-white px-8 py-3 rounded-lg hover:bg-purple-600 transition-colors"
+                      >
+                        {editingService ? 'Update Service' : 'Create Service'}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={resetServiceForm}
+                        className="bg-gray-500 text-white px-8 py-3 rounded-lg hover:bg-gray-600 transition-colors"
+                      >
+                        Cancel
+                      </button>
+                    </div>
+                  </form>
+                </div>
+              )}
+
+              {/* Services List */}
+              <div className="bg-white rounded-xl shadow-lg overflow-hidden">
+                <div className="px-6 py-4 border-b border-gray-200">
+                  <div className="flex justify-between items-center">
+                    <h3 className="text-lg font-semibold text-gray-900">
+                      All Services ({services.length})
+                    </h3>
+                    <div className="relative">
+                      <input
+                        type="text"
+                        placeholder="Search services..."
+                        value={serviceSearchTerm}
+                        onChange={(e) => setServiceSearchTerm(e.target.value)}
+                        className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+                      />
+                      <div className="absolute left-3 top-1/2 transform -translate-y-1/2">
+                        <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                        </svg>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="divide-y divide-gray-200">
+                  {services
+                    .filter(service => 
+                      service.serviceName.toLowerCase().includes(serviceSearchTerm.toLowerCase()) ||
+                      (service.userId?.organizationName || '').toLowerCase().includes(serviceSearchTerm.toLowerCase())
+                    )
+                    .map((service) => (
+                    <div key={service._id} className="p-6 hover:bg-gray-50">
+                      <div className="flex items-start justify-between">
+                        <div className="flex-1">
+                          <h4 className="text-lg font-medium text-gray-900">{service.serviceName}</h4>
+                          <div className="mt-2 flex items-center space-x-4 text-sm text-gray-500">
+                            <span>⏱️ {service.estimatedTime}</span>
+                            <span>💰 {service.charge}</span>
+                            <span>🏢 {service.userId?.organizationName || 'SuperAdmin'}</span>
+                            {service.userId?.location && (
+                              <span>📍 {service.userId.location.municipality}, {service.userId.location.district}</span>
+                            )}
+                            <span className={`px-2 py-1 rounded-full text-xs ${
+                              service.isActive 
+                                ? 'bg-green-100 text-green-800' 
+                                : 'bg-red-100 text-red-800'
+                            }`}>
+                              {service.isActive ? 'Active' : 'Inactive'}
+                            </span>
+                          </div>
+                          <div className="mt-3">
+                            <p className="text-sm font-medium text-gray-700">Required Documents:</p>
+                            <div className="mt-1 flex flex-wrap gap-2">
+                              {service.requiredDocuments?.map((doc, index) => (
+                                <span key={index} className="inline-flex px-2 py-1 text-xs bg-blue-100 text-blue-800 rounded">
+                                  {doc}
+                                </span>
+                              ))}
+                            </div>
+                          </div>
+                        </div>
+                        <div className="flex space-x-2 ml-4">
+                          <button
+                            onClick={() => {
+                              setShowServiceForm(true);
+                              setEditingService(service);
+                              setServiceForm({
+                                serviceName: service.serviceName,
+                                requiredDocuments: service.requiredDocuments || [''],
+                                procedure: service.procedure || [''],
+                                estimatedTime: service.estimatedTime,
+                                charge: service.charge,
+                                sampleForm: null,
+                                tokenSystemEnabled: service.tokenSystemEnabled || false,
+                                dailyTokenLimit: service.dailyTokenLimit || 50
+                              });
+                            }}
+                            className="text-indigo-600 hover:text-indigo-900 text-sm font-medium"
+                          >
+                            Edit
+                          </button>
+                          <button
+                            onClick={() => handleDeleteService(service._id)}
+                            className="text-red-600 hover:text-red-900 text-sm font-medium"
+                          >
+                            Delete
+                          </button>
+                          <Link
+                            to={`/service/${service._id}`}
+                            className="bg-purple-500 text-white px-4 py-2 rounded-lg hover:bg-purple-600 transition-colors text-sm font-medium"
+                          >
+                            View
+                          </Link>
+                        </div>
                       </div>
                     </div>
                   ))}

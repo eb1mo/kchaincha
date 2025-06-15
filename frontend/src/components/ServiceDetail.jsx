@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import axios from 'axios';
 import { getServiceEndpoint, getFileUrl } from '../config/api';
+import AssistanceRequestPopup from './AssistanceRequestPopup';
 
 const ServiceDetail = () => {
   const { id } = useParams();
@@ -15,6 +16,7 @@ const ServiceDetail = () => {
     userContact: ''
   });
   const [tokenLoading, setTokenLoading] = useState(false);
+  const [showAssistancePopup, setShowAssistancePopup] = useState(false);
 
   useEffect(() => {
     const fetchService = async () => {
@@ -390,18 +392,39 @@ const ServiceDetail = () => {
         )}
 
         {/* Back to Home Button */}
-        <div className="text-center mt-12">
-          <Link 
-            to="/" 
-            className="bg-gray-600 text-white px-8 py-3 rounded-lg hover:bg-gray-700 transition-colors inline-flex items-center space-x-2"
+        <div className="text-center mt-12 space-y-4">
+          <button
+            onClick={() => setShowAssistancePopup(true)}
+            className="bg-gradient-to-r from-purple-600 to-blue-600 text-white px-8 py-3 rounded-lg hover:from-purple-700 hover:to-blue-700 transition-all transform hover:scale-105 inline-flex items-center space-x-2 shadow-lg"
           >
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
             </svg>
-            <span>Back to Home</span>
-          </Link>
+            <span>Book Assistance Service</span>
+          </button>
+          
+          <div>
+            <Link 
+              to="/" 
+              className="bg-gray-600 text-white px-8 py-3 rounded-lg hover:bg-gray-700 transition-colors inline-flex items-center space-x-2"
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+              </svg>
+              <span>Back to Home</span>
+            </Link>
+          </div>
         </div>
       </main>
+
+      {/* Assistance Request Popup */}
+      <AssistanceRequestPopup
+        isOpen={showAssistancePopup}
+        onClose={() => setShowAssistancePopup(false)}
+        serviceId={id}
+        requestType="service"
+        serviceName={service?.serviceName}
+      />
     </div>
   );
 };

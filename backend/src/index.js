@@ -227,6 +227,46 @@ const serviceBundleSchema = new mongoose.Schema({
 
 const ServiceBundle = mongoose.model("ServiceBundle", serviceBundleSchema)
 
+// Assistance Request Schema
+const assistanceRequestSchema = new mongoose.Schema({
+  userName: {
+    type: String,
+    required: true,
+  },
+  userContact: {
+    type: String,
+    required: true,
+  },
+  serviceId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Service',
+    default: null,
+  },
+  bundleId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'ServiceBundle',
+    default: null,
+  },
+  requestType: {
+    type: String,
+    enum: ['service', 'bundle'],
+    required: true,
+  },
+  status: {
+    type: String,
+    enum: ['pending', 'contacted', 'resolved'],
+    default: 'pending',
+  },
+  notes: {
+    type: String,
+    default: '',
+  }
+}, {
+  timestamps: true,
+})
+
+const AssistanceRequest = mongoose.model("AssistanceRequest", assistanceRequestSchema)
+
 // Middleware to verify JWT token
 const authenticateToken = (req, res, next) => {
   const authHeader = req.headers['authorization']
@@ -969,6 +1009,88 @@ app.get("/api/services/:id/token-status", async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 });
+
+// POST /api/assistance-request - Create assistance request
+app.post("/api/assistance-request", async (req, res) => {
+  try {
+    const { userName, userContact, serviceId, bundleId, requestType } = req.body
+
+    // Validate required fields
+    if (!userName || !userContact || !requestType) {
+      return res.status(400).json({ error: "Name, contact, and request type are required" })
+    }
+
+    // Validate request type and corresponding ID
+    if (requestType === 'service' && !serviceId) {
+      return res.status(400).json({ error: "Service ID is required for service requests" })
+    }
+    if (requestType === 'bundle' && !bundleId) {
+      return res.status(400).json({ error: "Bundle ID is required for bundle requests" })
+    }
+
+    // Verify service or bundle exists
+    if (requestType === 'service') {
+      const service = await Service.findById(serviceId)
+      if (!service) {
+        return res.status(404).json({ error: "Service not found" })
+      }
+    } else if (requestType === 'bundle') {
+      const bundle = await ServiceBundle.findById(bundleId)
+      if (!bundle) {
+        return res.status(404).json({ error: "Bundle not found" })
+      }
+    }
+
+    const assistanceRequest = new AssistanceRequest({
+      userName,
+      userContact,
+      serviceId: requestType === 'service' ? serviceId : null,
+      bundleId: requestType === 'bundle' ? bundleId : null,
+      requestType,
+    })
+
+    await assistanceRequest.save()
+    res.status(201).json({ message: "Assistance request submitted successfully", request: assistanceRequest })
+  } catch (error) {
+    res.status(500).json({ error: error.message })
+  }
+})
+
+// GET /api/superadmin/assistance-requests - Get all assistance requests (superadmin only)
+app.get("/api/superadmin/assistance-requests", authenticateSuperAdmin, async (req, res) => {
+  try {
+    const requests = await AssistanceRequest.find()
+      .populate('serviceId', 'serviceName')
+      .populate('bundleId', 'bundleName')
+      .sort({ createdAt: -1 })
+    
+    res.json(requests)
+  } catch (error) {
+    res.status(500).json({ error: error.message })
+  }
+})
+
+// PUT /api/superadmin/assistance-requests/:id - Update assistance request status (superadmin only)
+app.put("/api/superadmin/assistance-requests/:id", authenticateSuperAdmin, async (req, res) => {
+  try {
+    const { status, notes } = req.body
+    
+    const request = await AssistanceRequest.findByIdAndUpdate(
+      req.params.id,
+      { status, notes },
+      { new: true }
+    ).populate('serviceId', 'serviceName')
+     .populate('bundleId', 'bundleName')
+    
+    if (!request) {
+      return res.status(404).json({ error: "Assistance request not found" })
+    }
+    
+    res.json(request)
+  } catch (error) {
+    res.status(500).json({ error: error.message })
+  }
+})
 
 // SUPERADMIN ROUTES
 

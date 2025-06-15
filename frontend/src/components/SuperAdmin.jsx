@@ -9,6 +9,7 @@ const SuperAdmin = () => {
   const [licenseKeys, setLicenseKeys] = useState([]);
   const [services, setServices] = useState([]);
   const [bundles, setBundles] = useState([]);
+  const [assistanceRequests, setAssistanceRequests] = useState([]);
   const [loading, setLoading] = useState(true);
   const [user, setUser] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
@@ -78,19 +79,28 @@ const SuperAdmin = () => {
     try {
       const headers = { 'Authorization': `Bearer ${token}` };
       
-      const [usersRes, licenseKeysRes, servicesRes, bundlesRes] = await Promise.all([
+      const [usersRes, licenseKeysRes, servicesRes, bundlesRes, assistanceRes] = await Promise.all([
         axios.get(API_ENDPOINTS.SUPERADMIN.USERS, { headers }),
         axios.get(API_ENDPOINTS.SUPERADMIN.LICENSE_KEYS, { headers }),
         axios.get(API_ENDPOINTS.SUPERADMIN.SERVICES, { headers }),
-        axios.get(API_ENDPOINTS.SUPERADMIN.BUNDLES, { headers })
+        axios.get(API_ENDPOINTS.SUPERADMIN.BUNDLES, { headers }),
+        axios.get(API_ENDPOINTS.SUPERADMIN.ASSISTANCE_REQUESTS, { headers })
       ]);
       
-      setUsers(usersRes.data);
-      setLicenseKeys(licenseKeysRes.data);
-      setServices(servicesRes.data);
-      setBundles(bundlesRes.data);
+      setUsers(Array.isArray(usersRes.data) ? usersRes.data : []);
+      setLicenseKeys(Array.isArray(licenseKeysRes.data) ? licenseKeysRes.data : []);
+      setServices(Array.isArray(servicesRes.data) ? servicesRes.data : []);
+      setBundles(Array.isArray(bundlesRes.data) ? bundlesRes.data : []);
+      setAssistanceRequests(Array.isArray(assistanceRes.data) ? assistanceRes.data : []);
     } catch (error) {
       console.error('Error fetching data:', error);
+      // Set default empty arrays to prevent map errors
+      setUsers([]);
+      setLicenseKeys([]);
+      setServices([]);
+      setBundles([]);
+      setAssistanceRequests([]);
+      
       if (error.response?.status === 401 || error.response?.status === 403) {
         handleLogout();
       }
@@ -360,6 +370,25 @@ const SuperAdmin = () => {
     setShowServiceForm(false);
   };
 
+  // Assistance Request Management Functions
+  const updateAssistanceRequestStatus = async (requestId, status, notes = '') => {
+    try {
+      const response = await axios.put(`/api/superadmin/assistance-requests/${requestId}`, 
+        { status, notes }, 
+        { headers: getAuthHeaders() }
+      );
+      
+      setAssistanceRequests(assistanceRequests.map(request => 
+        request._id === requestId ? response.data : request
+      ));
+      
+      alert('Request status updated successfully!');
+    } catch (error) {
+      console.error('Error updating request status:', error);
+      alert('Error updating request status');
+    }
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
@@ -376,31 +405,31 @@ const SuperAdmin = () => {
       {/* Header */}
       <header className="bg-white shadow-sm border-b">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between space-y-4 sm:space-y-0">
             <Link to="/" className="flex items-center space-x-3">
               <img 
                 src="/kchaincha-nav.png" 
                 alt="Kchaincha Logo" 
-                className="w-40"
+                className="w-32 sm:w-40"
               />
-              <div>
-                <h1 className="text-2xl font-bold text-gray-900">SuperAdmin Panel</h1>
+              <div className="hidden sm:block">
+                <h1 className="text-xl sm:text-2xl font-bold text-gray-900">SuperAdmin Panel</h1>
                 <p className="text-sm text-gray-600">System Management</p>
               </div>
             </Link>
-            <div className="flex items-center space-x-4">
+            <div className="flex items-center space-x-2 sm:space-x-4">
               <div className="text-right">
                 <p className="text-sm font-medium text-gray-900">Welcome, {user?.username}</p>
                 <p className="text-xs text-purple-600 font-medium">SuperAdmin</p>
               </div>
               <button
                 onClick={handleLogout}
-                className="bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition-colors flex items-center space-x-2"
+                className="bg-gray-500 text-white px-3 sm:px-4 py-2 rounded-lg hover:bg-gray-600 transition-colors flex items-center space-x-1 sm:space-x-2"
               >
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
                 </svg>
-                <span>Logout</span>
+                <span className="hidden sm:inline">Logout</span>
               </button>
             </div>
           </div>
@@ -410,24 +439,26 @@ const SuperAdmin = () => {
       {/* Navigation Tabs */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
         <div className="border-b border-gray-200">
-          <nav className="-mb-px flex space-x-8">
+          <nav className="-mb-px flex flex-wrap gap-2 sm:space-x-8 sm:gap-0">
             {[
-              { id: 'users', name: 'User Management', icon: '👥' },
-              { id: 'licenses', name: 'License Keys', icon: '🔑' },
-              { id: 'bundles', name: 'Service Bundles', icon: '📦' },
-              { id: 'services', name: 'Services', icon: '🔧' }
+              { id: 'users', name: 'User Management', icon: '👥', shortName: 'Users' },
+              { id: 'licenses', name: 'License Keys', icon: '🔑', shortName: 'Licenses' },
+              { id: 'bundles', name: 'Service Bundles', icon: '📦', shortName: 'Bundles' },
+              { id: 'services', name: 'Services', icon: '🔧', shortName: 'Services' },
+              { id: 'assistance', name: 'Assistance Requests', icon: '🤝', shortName: 'Assistance' }
             ].map((tab) => (
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
-                className={`py-2 px-1 border-b-2 font-medium text-sm flex items-center space-x-2 ${
+                className={`py-2 px-1 border-b-2 font-medium text-xs sm:text-sm flex items-center space-x-1 sm:space-x-2 ${
                   activeTab === tab.id
                     ? 'border-purple-500 text-purple-600'
                     : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
                 }`}
               >
                 <span>{tab.icon}</span>
-                <span>{tab.name}</span>
+                <span className="hidden sm:inline">{tab.name}</span>
+                <span className="sm:hidden">{tab.shortName}</span>
               </button>
             ))}
           </nav>
@@ -530,8 +561,8 @@ const SuperAdmin = () => {
               {/* License Key Generation Form */}
               <div className="bg-white rounded-xl shadow-lg p-6">
                 <h3 className="text-lg font-semibold text-gray-900 mb-4">Generate License Keys</h3>
-                <form onSubmit={generateLicenseKeys} className="flex items-end space-x-4">
-                  <div>
+                <form onSubmit={generateLicenseKeys} className="flex flex-col sm:flex-row sm:items-end space-y-4 sm:space-y-0 sm:space-x-4">
+                  <div className="flex-1 sm:flex-none">
                     <label className="block text-sm font-medium text-gray-700 mb-2">
                       Number of Keys
                     </label>
@@ -541,10 +572,10 @@ const SuperAdmin = () => {
                       max="100"
                       value={licenseForm.count}
                       onChange={(e) => setLicenseForm(prev => ({ ...prev, count: parseInt(e.target.value) }))}
-                      className="w-24 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+                      className="w-full sm:w-24 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
                     />
                   </div>
-                  <div>
+                  <div className="flex-1 sm:flex-none">
                     <label className="block text-sm font-medium text-gray-700 mb-2">
                       Expires At (Optional)
                     </label>
@@ -552,12 +583,12 @@ const SuperAdmin = () => {
                       type="date"
                       value={licenseForm.expiresAt}
                       onChange={(e) => setLicenseForm(prev => ({ ...prev, expiresAt: e.target.value }))}
-                      className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
                     />
                   </div>
                   <button
                     type="submit"
-                    className="bg-purple-500 text-white px-6 py-2 rounded-lg hover:bg-purple-600 transition-colors"
+                    className="w-full sm:w-auto bg-purple-500 text-white px-6 py-2 rounded-lg hover:bg-purple-600 transition-colors"
                   >
                     Generate
                   </button>
@@ -790,17 +821,17 @@ const SuperAdmin = () => {
                     </div>
 
                     {/* Submit Buttons */}
-                    <div className="flex space-x-4">
+                    <div className="flex flex-col sm:flex-row space-y-4 sm:space-y-0 sm:space-x-4">
                       <button
                         type="submit"
-                        className="bg-purple-500 text-white px-8 py-3 rounded-lg hover:bg-purple-600 transition-colors"
+                        className="w-full sm:w-auto bg-purple-500 text-white px-8 py-3 rounded-lg hover:bg-purple-600 transition-colors"
                       >
                         {editingBundle ? 'Update Bundle' : 'Create Bundle'}
                       </button>
                       <button
                         type="button"
                         onClick={resetBundleForm}
-                        className="bg-gray-500 text-white px-8 py-3 rounded-lg hover:bg-gray-600 transition-colors"
+                        className="w-full sm:w-auto bg-gray-500 text-white px-8 py-3 rounded-lg hover:bg-gray-600 transition-colors"
                       >
                         Cancel
                       </button>
@@ -820,13 +851,13 @@ const SuperAdmin = () => {
                 <div className="divide-y divide-gray-200">
                   {bundles.map((bundle) => (
                     <div key={bundle._id} className="p-6 hover:bg-gray-50">
-                      <div className="flex items-start justify-between">
+                      <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between">
                         <div className="flex-1">
                           <h4 className="text-lg font-medium text-gray-900">{bundle.bundleName}</h4>
                           {bundle.description && (
                             <p className="text-sm text-gray-600 mt-1">{bundle.description}</p>
                           )}
-                          <div className="mt-2 flex items-center space-x-4 text-sm text-gray-500">
+                          <div className="mt-2 flex flex-wrap items-center gap-2 sm:gap-4 text-sm text-gray-500">
                             <span>📍 {bundle.location.municipality}, {bundle.location.district}</span>
                             <span>📦 {bundle.services.length} services</span>
                             <span className={`px-2 py-1 rounded-full text-xs ${
@@ -848,26 +879,26 @@ const SuperAdmin = () => {
                             </div>
                           </div>
                         </div>
-                        <div className="flex space-x-2 ml-4">
+                        <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2 mt-4 sm:mt-0 sm:ml-4">
                           <button
                             onClick={() => handleEditBundle(bundle)}
-                            className="text-indigo-600 hover:text-indigo-900 text-sm font-medium"
+                            className="text-indigo-600 hover:text-indigo-900 text-sm font-medium px-3 py-1 border border-indigo-300 rounded text-center"
                           >
                             Edit
                           </button>
                           <button
                             onClick={() => handleDeleteBundle(bundle._id)}
-                            className="text-red-600 hover:text-red-900 text-sm font-medium"
+                            className="text-red-600 hover:text-red-900 text-sm font-medium px-3 py-1 border border-red-300 rounded text-center"
                           >
                             Delete
                           </button>
                         </div>
                       </div>
-                      <div className="flex items-center justify-between pt-4 border-t border-gray-200">
+                      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between pt-4 border-t border-gray-200 space-y-2 sm:space-y-0">
                         <div className="text-sm text-gray-500">
                           Created by {bundle.createdBy?.organizationName || 'SuperAdmin'}
                         </div>
-                        <button className="bg-purple-500 text-white px-6 py-2 rounded-lg hover:bg-purple-600 transition-colors text-sm font-medium">
+                        <button className="w-full sm:w-auto bg-purple-500 text-white px-6 py-2 rounded-lg hover:bg-purple-600 transition-colors text-sm font-medium">
                           View Bundle
                         </button>
                       </div>
@@ -1094,17 +1125,17 @@ const SuperAdmin = () => {
                     </div>
 
                     {/* Submit Buttons */}
-                    <div className="flex space-x-4">
+                    <div className="flex flex-col sm:flex-row space-y-4 sm:space-y-0 sm:space-x-4">
                       <button
                         type="submit"
-                        className="bg-purple-500 text-white px-8 py-3 rounded-lg hover:bg-purple-600 transition-colors"
+                        className="w-full sm:w-auto bg-purple-500 text-white px-8 py-3 rounded-lg hover:bg-purple-600 transition-colors"
                       >
                         {editingService ? 'Update Service' : 'Create Service'}
                       </button>
                       <button
                         type="button"
                         onClick={resetServiceForm}
-                        className="bg-gray-500 text-white px-8 py-3 rounded-lg hover:bg-gray-600 transition-colors"
+                        className="w-full sm:w-auto bg-gray-500 text-white px-8 py-3 rounded-lg hover:bg-gray-600 transition-colors"
                       >
                         Cancel
                       </button>
@@ -1210,6 +1241,118 @@ const SuperAdmin = () => {
                       </div>
                     </div>
                   ))}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Assistance Requests Tab */}
+          {activeTab === 'assistance' && (
+            <div className="space-y-6">
+              {/* Assistance Requests List */}
+              <div className="bg-white rounded-xl shadow-lg overflow-hidden">
+                <div className="px-6 py-4 border-b border-gray-200">
+                  <h3 className="text-lg font-semibold text-gray-900">
+                    Assistance Requests ({assistanceRequests.length})
+                  </h3>
+                </div>
+                
+                <div className="overflow-x-auto">
+                  <table className="min-w-full divide-y divide-gray-200">
+                    <thead className="bg-gray-50">
+                      <tr>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          User Name
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Contact
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Service/Bundle
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Type
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Status
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Date
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Actions
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody className="bg-white divide-y divide-gray-200">
+                      {assistanceRequests.map((request) => (
+                        <tr key={request._id} className="hover:bg-gray-50">
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <div className="text-sm font-medium text-gray-900">{request.userName}</div>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <div className="text-sm text-gray-900">{request.userContact}</div>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <div className="text-sm text-gray-900">
+                              {request.requestType === 'service' 
+                                ? request.serviceId?.serviceName || 'Service not found'
+                                : request.bundleId?.bundleName || 'Bundle not found'
+                              }
+                            </div>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+                              request.requestType === 'service' 
+                                ? 'bg-blue-100 text-blue-800' 
+                                : 'bg-purple-100 text-purple-800'
+                            }`}>
+                              {request.requestType}
+                            </span>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+                              request.status === 'resolved' 
+                                ? 'bg-green-100 text-green-800' 
+                                : request.status === 'contacted'
+                                ? 'bg-yellow-100 text-yellow-800'
+                                : 'bg-red-100 text-red-800'
+                            }`}>
+                              {request.status}
+                            </span>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <div className="text-sm text-gray-900">
+                              {new Date(request.createdAt).toLocaleDateString()}
+                            </div>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                            <div className="flex space-x-2">
+                              {request.status === 'pending' && (
+                                <button
+                                  onClick={() => updateAssistanceRequestStatus(request._id, 'contacted')}
+                                  className="text-blue-600 hover:text-blue-900"
+                                >
+                                  Mark Contacted
+                                </button>
+                              )}
+                              {request.status === 'contacted' && (
+                                <button
+                                  onClick={() => updateAssistanceRequestStatus(request._id, 'resolved')}
+                                  className="text-green-600 hover:text-green-900"
+                                >
+                                  Mark Resolved
+                                </button>
+                              )}
+                              {request.status === 'resolved' && (
+                                <span className="text-gray-500">Completed</span>
+                              )}
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
                 </div>
               </div>
             </div>

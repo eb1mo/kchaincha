@@ -15,6 +15,9 @@ export const API_ENDPOINTS = {
   LOCATIONS: `${API_BASE_URL}/api/locations`,
   BUNDLES: `${API_BASE_URL}/api/bundles`,
   
+  // Assistance request endpoint
+  ASSISTANCE_REQUEST: `${API_BASE_URL}/api/assistance-request`,
+  
   // Upload endpoint
   UPLOAD: `${API_BASE_URL}/api/upload`,
   
@@ -24,6 +27,7 @@ export const API_ENDPOINTS = {
     LICENSE_KEYS: `${API_BASE_URL}/api/superadmin/license-keys`,
     SERVICES: `${API_BASE_URL}/api/superadmin/services`,
     BUNDLES: `${API_BASE_URL}/api/superadmin/bundles`,
+    ASSISTANCE_REQUESTS: `${API_BASE_URL}/api/superadmin/assistance-requests`,
   }
 };
 

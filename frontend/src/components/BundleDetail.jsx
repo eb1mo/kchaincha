@@ -2,12 +2,14 @@ import { useState, useEffect } from 'react';
 import { Link, useParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { API_ENDPOINTS } from '../config/api';
+import AssistanceRequestPopup from './AssistanceRequestPopup';
 
 const BundleDetail = () => {
   const { bundleId } = useParams();
   const [bundle, setBundle] = useState(null);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
+  const [showAssistancePopup, setShowAssistancePopup] = useState(false);
 
   useEffect(() => {
     fetchBundleDetails();
@@ -224,21 +226,44 @@ const BundleDetail = () => {
         <div className="mt-8 text-center">
           <div className="bg-gradient-to-r from-purple-500 to-blue-600 rounded-xl p-8 text-white">
             <h3 className="text-2xl font-bold mb-2">Ready to Get Started?</h3>
-            <p className="text-purple-100 mb-4">
+            <p className="text-purple-100 mb-6">
               Click on any service above to view detailed requirements and start your application process.
             </p>
-            <Link 
-              to="/" 
-              className="inline-flex items-center space-x-2 bg-white text-purple-600 px-6 py-3 rounded-lg hover:bg-gray-100 transition-colors font-medium"
-            >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-              </svg>
-              <span>Explore More Services</span>
-            </Link>
+            <div className="space-y-4">
+              <button
+                onClick={() => setShowAssistancePopup(true)}
+                className="inline-flex items-center space-x-2 bg-white text-purple-600 px-8 py-3 rounded-lg hover:bg-gray-100 transition-all transform hover:scale-105 font-medium shadow-lg"
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                </svg>
+                <span>Book Assistance for This Bundle</span>
+              </button>
+              
+              <div>
+                <Link 
+                  to="/" 
+                  className="inline-flex items-center space-x-2 bg-purple-700 text-white px-6 py-3 rounded-lg hover:bg-purple-800 transition-colors font-medium"
+                >
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                  </svg>
+                  <span>Explore More Services</span>
+                </Link>
+              </div>
+            </div>
           </div>
         </div>
       </main>
+
+      {/* Assistance Request Popup */}
+      <AssistanceRequestPopup
+        isOpen={showAssistancePopup}
+        onClose={() => setShowAssistancePopup(false)}
+        bundleId={bundleId}
+        requestType="bundle"
+        bundleName={bundle?.bundleName}
+      />
     </div>
   );
 };

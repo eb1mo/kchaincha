@@ -75,10 +75,10 @@ const Admin = () => {
   };
 
   const handleInputChange = (e) => {
-    const { name, value } = e.target;
+    const { name, value, type, checked } = e.target;
     setFormData(prev => ({
       ...prev,
-      [name]: value
+      [name]: type === 'checkbox' ? checked : value
     }));
   };
 
@@ -178,7 +178,9 @@ const Admin = () => {
       ...formData,
       documents: filteredDocuments,
       procedure: procedureString,
-      sampleFormUrl
+      sampleFormUrl,
+      tokensEnabled: Boolean(formData.tokensEnabled),
+      dailyTokenLimit: formData.tokensEnabled ? parseInt(formData.dailyTokenLimit) || 0 : 0
     };
 
     try {

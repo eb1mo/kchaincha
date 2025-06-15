@@ -562,14 +562,14 @@ app.post("/api/admin/services", authenticateToken, async (req, res) => {
       charge,
       sampleFormUrl: sampleFormUrl || "",
       userId: req.user.userId,
-      tokensEnabled: tokensEnabled || false,
-      dailyTokenLimit: dailyTokenLimit || 0,
+      tokensEnabled: tokensEnabled === true || tokensEnabled === 'true',
+      dailyTokenLimit: tokensEnabled === true || tokensEnabled === 'true' ? parseInt(dailyTokenLimit) || 0 : 0,
       tokensIssued: 0,
-      lastTokenReset: new Date(),
+      lastTokenReset: new Date()
     })
     
-    const savedService = await service.save()
-    res.status(201).json(savedService)
+    await service.save()
+    res.status(201).json(service)
   } catch (error) {
     res.status(400).json({ error: error.message })
   }
@@ -585,6 +585,9 @@ app.put("/api/admin/services/:id", authenticateToken, async (req, res) => {
       return res.status(404).json({ error: "Service not found or unauthorized" })
     }
 
+    const tokenEnabledBool = tokensEnabled === true || tokensEnabled === 'true';
+    const dailyTokenLimitInt = tokenEnabledBool ? parseInt(dailyTokenLimit) || 0 : 0;
+
     const updateData = {
       serviceName,
       documents,
@@ -592,12 +595,12 @@ app.put("/api/admin/services/:id", authenticateToken, async (req, res) => {
       estimatedTime,
       charge,
       sampleFormUrl: sampleFormUrl || "",
-      tokensEnabled: tokensEnabled || false,
-      dailyTokenLimit: dailyTokenLimit || 0,
+      tokensEnabled: tokenEnabledBool,
+      dailyTokenLimit: dailyTokenLimitInt,
     };
 
     // Reset token count if token settings changed
-    if (service.tokensEnabled !== tokensEnabled || service.dailyTokenLimit !== dailyTokenLimit) {
+    if (service.tokensEnabled !== tokenEnabledBool || service.dailyTokenLimit !== dailyTokenLimitInt) {
       updateData.tokensIssued = 0;
       updateData.lastTokenReset = new Date();
     }

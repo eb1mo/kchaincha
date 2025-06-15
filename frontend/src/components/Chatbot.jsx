@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
 
 const Chatbot = () => {
-  const [isOpen, setIsOpen] = useState(false);
+  const [isOpen, setIsOpen] = useState(true);
   const [messages, setMessages] = useState([
     {
       id: 1,
